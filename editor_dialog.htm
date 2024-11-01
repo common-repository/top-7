@@ -1,0 +1,130 @@
+<html>
+
+<head>
+<!-- This form needs to dynamically get the list of TOP 7's from the mother ship -->
+<script src="http://www.thetop7.com/wpp/v1/slugs.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+	//var suggestions = new Array();
+	var top7select;
+	var top7counter;
+	var oldins;
+	var words = new Array();
+
+	document.addEventListener('DOMContentLoaded', function() {		
+		if(top7slugs == undefined){
+			//File didn't load properly
+			console.log("Uh Oh - The slugs were not passed properly");
+			//Fall back on the local cache here...
+		}else{
+			//get the vars
+			top7select = document.getElementById("top7_select_slug");
+			top7counter = document.getElementById("top7_results_found_count");
+			top7RefillSelectBox();
+		}	
+		top7Init();	
+	});
+
+	var top7Init = function(){
+		window.setInterval("top7LookAt()", 100);
+	}
+	
+	var top7LookAt = function(){
+		var ins = document.getElementById("top7_autocomplete").value;
+		//ins = "The Top 7 "+ins;	//Auto add "The Top 7" to each query 
+		if (oldins == ins) return;	//Position has not changed -- return
+		else if(ins.length == 0) top7RefillSelectBox();
+		else if (ins.length > 0){
+			top7ClearOutput();
+			words = top7GetWord(ins);
+			if (words.length > 0){
+				for (var i=0;i < words.length; ++i){
+					top7AddWord(words[i]);
+				}
+				top7counter.innerHTML = words.length;
+			}
+		}
+		oldins = ins;
+	}
+	
+	var top7AddWord = function(top7slug){		//An entire word object is passed
+		top7select.options[top7select.options.length] = new Option(top7slug.title, top7slug.slug);
+	}
+	
+	var top7ClearOutput = function(){
+		top7select.options.length = 0;	//Clear all the nodes
+	}
+	
+	var top7RefillSelectBox = function(){
+		top7ClearOutput();
+		for (var i = 0; i < top7slugs.length; i++) {		//Refill the select box
+			top7slug = top7slugs[i];
+			top7select.options[top7select.options.length] = new Option(top7slug.title, top7slug.slug);
+    	}
+    	top7counter.innerHTML = top7slugs.length;
+	}
+	
+	var top7GetWord = function(search){
+		var words = new Array();
+		for (var i=0;i < top7slugs.length; ++i){
+			var pos = top7slugs[i].title.indexOf(search);
+			if (pos >= 0){
+				words[words.length] = top7slugs[i];	//Sending the entire word object over -- not just the title
+			}
+		}
+		return words;
+	}
+	
+	var top7_insert_shortcode = function(){
+		
+		//Get the vars
+		//var top7select = document.getElementById("top7_select_slug");
+		var top7SlugOption = top7select.options[top7select.selectedIndex];
+		if(top7SlugOption == undefined){
+			alert("Oops... Please select a Top 7 from the menu.");
+		}
+		var top7slug = top7SlugOption.value;
+		var top7title = top7select.options[top7select.selectedIndex].text;
+		var top7FlagDescription = document.getElementById("top7CheckboxHideDescription").checked;
+		var top7FlagSharing = document.getElementById("top7CheckboxHideSharing").checked;
+		var top7FlagLimitList = document.getElementById("top7CheckboxLimitList").checked;
+		var top7shortcode = '[top7 slug="'+top7slug+'" title="'+top7title+'" hide_description="'+top7FlagDescription+'" hide_sharing="'+top7FlagSharing+'" limit_list="'+top7FlagLimitList+'"]';
+		
+		//Insert content and close the window
+		parent.tinyMCE.execCommand('mceInsertContent', false, top7shortcode);
+		parent.tinyMCE.activeEditor.focus();
+		parent.tinyMCE.activeEditor.windowManager.close(this);
+	};
+
+	
+	
+</script>
+
+</head>
+<body style="text-align:center;">
+
+<div style="display:inline-block; width:500px;">
+	<form>
+		<h2 style="vertical-align:middle;"><img src="http://www.thetop7.com/images/questions/question_thinking_75.png" style="vertical-align:middle;" />Select your desired TOP 7</h2>
+		<div style="display:table; padding:10px;">
+			<div style="display:table-cell; width:70%; text-align:left;">Filter Results: <input id="top7_autocomplete" type="text" name="text" autocomplete="on"></div>
+			<div style="display:table-cell; width:auto;">&nbsp;</div>
+			<div style="display:table-cell; width:30%; text-align:left; font-size:small;">Results found: <div style="display:inline-block;" id="top7_results_found_count">&nbsp;</div></div>
+		</div>
+		<select name="top7_select_slug" id="top7_select_slug" size="10" style="width:100%; height:150px;">
+			<!--<option value="default-slug">-- Choose a Top 7 List --</option>-->
+		</select>
+		<div style="text-align:left; font-size:small; margin-top:10px;">
+			<p>Additional options to limit functionality. <!--We recommend leaving them all unchecked to maximize engagement.--></p>
+			<div><input type="checkbox" id="top7CheckboxHideDescription" /> Hide Description</div>
+			<div><input type="checkbox" id="top7CheckboxHideSharing" /> Hide Social Sharing</div>
+			<div><input type="checkbox" id="top7CheckboxLimitList" /> Limit List <span>(if checked, will limit to only the Top 7 answers)</span></div>
+		</div>
+		<p><input type="button" onclick="javascript:top7_insert_shortcode();" value="Insert" /></p>
+	</form>
+</div>
+
+</body>
+
+</html>
